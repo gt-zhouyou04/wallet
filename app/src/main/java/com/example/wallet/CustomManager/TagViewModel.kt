@@ -1,9 +1,7 @@
 package com.example.wallet.CustomManager
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import kotlinx.coroutines.launch
 
 class TagViewModel(application: Application) : AndroidViewModel(application) {
@@ -22,5 +20,17 @@ class TagViewModel(application: Application) : AndroidViewModel(application) {
 
     fun delete(id: Int) = viewModelScope.launch {
         repository.delete(id)
+    }
+
+    fun getTagNameById(tagId: Int): LiveData<String?> {
+        val tagNameLiveData = MutableLiveData<String?>()
+
+        // 观察 allTags 的变化，并更新 tagNameLiveData
+        allTags.observeForever { tags ->
+            val tagName = tags.firstOrNull { it.id == tagId }?.name
+            tagNameLiveData.value = tagName
+        }
+
+        return tagNameLiveData
     }
 }

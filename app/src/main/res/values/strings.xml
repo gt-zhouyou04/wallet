@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">wallet</string>
+    <string name="accessibility_service_description">service for notification changed\n</string>
 </resources>
