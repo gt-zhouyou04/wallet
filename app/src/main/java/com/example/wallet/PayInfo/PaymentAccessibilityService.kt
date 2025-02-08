@@ -2,13 +2,13 @@ package com.example.wallet.PayInfo
 
 import android.accessibilityservice.AccessibilityService
 import android.app.Notification
-import android.content.Intent
+import android.app.AlertDialog
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
-import com.example.wallet.Activity.TagSelectionActivity
+import android.view.WindowManager
 
 class PaymentAccessibilityService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
@@ -65,9 +65,9 @@ class PaymentAccessibilityService : AccessibilityService() {
                 Log.d("PaymentAccessibilityService", "Node Text: $it")
 
                 if (packageName == "com.tencent.mm" && (it.contains("微信支付") || it.contains("微信转账"))) {
-                    showTagSelectionDialog(it.toString())
+                    showDialog(it.toString())
                 } else if (packageName == "com.eg.android.AlipayGphone" && (it.contains("支出") || it.contains("支付宝转账"))) {
-                    showTagSelectionDialog(it.toString())
+                    showDialog(it.toString())
                 }
             }
         } else {
@@ -77,11 +77,18 @@ class PaymentAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun showTagSelectionDialog(notificationText: String) {
-        val intent = Intent(this, TagSelectionActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            putExtra("notificationText", notificationText)
+    private fun showDialog(notificationText: String) {
+        handler.post {
+            val alertDialog = AlertDialog.Builder(this)
+                .setTitle("支付信息")
+                .setMessage(notificationText)
+                .setPositiveButton("确定") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .create()
+
+            alertDialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
+            alertDialog.show()
         }
-        startActivity(intent)
     }
 }

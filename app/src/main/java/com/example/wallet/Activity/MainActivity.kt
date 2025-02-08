@@ -52,6 +52,7 @@ class MainActivity : AppCompatActivity() {
             records?.let { recordAdapter.setRecords(it) }
         })
 
+        //todo: 添加打开显示悬浮窗权限的代码——android.permission.SYSTEM_ALERT_WINDOW
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
         startActivity(intent)
     }
