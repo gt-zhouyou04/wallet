@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">wallet</string>
-    <string name="accessibility_service_description">service for notification changed\n</string>
+    <string name="accessibility_service_description">该服务可帮助捕获微信和支付宝的支付通知。</string>
+
+    <!-- Accessibility service label -->
+    <string name="accessibility_service_label">支付通知监控</string>
 </resources>
