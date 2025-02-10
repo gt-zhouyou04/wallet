@@ -17,14 +17,28 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.wallet.CustomManager.AppDatabase
+import com.example.wallet.CustomManager.Tag
+import com.example.wallet.CustomManager.TagAdapter
+import com.example.wallet.CustomManager.TagDao
 import com.example.wallet.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class PaymentNotificationListenerService : NotificationListenerService() {
     private val handler = Handler(Looper.getMainLooper())
+    private lateinit var db: AppDatabase
+    private lateinit var tagDao: TagDao
 
     override fun onCreate() {
         super.onCreate()
         Log.d("PaymentNotificationListenerService", "Service Created")
+        db = AppDatabase.getDatabase(this)
+        tagDao = db.tagDao()
 
         // 创建前台服务通知
         val channelId = "PaymentNotificationListenerServiceChannel"
@@ -96,39 +110,70 @@ class PaymentNotificationListenerService : NotificationListenerService() {
         super.onNotificationRemoved(sbn)
     }
 
+    fun extractAmount(notificationText: String): Double? {
+        // 定义一个正则表达式来匹配数字部分
+        val regex = """\d+(\.\d+)?""".toRegex()
+
+        // 使用正则表达式查找匹配的内容
+        val matchResult = regex.find(notificationText)
+
+        // 如果找到匹配的内容，将其转换为Double
+        return matchResult?.value?.toDoubleOrNull()
+    }
+
     private fun showDialog(notificationText: String) {
+        if (notificationText.equals("")) {
+            return
+        }
         handler.post {
             val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             val dialogView = inflater.inflate(R.layout.activity_tag_selection, null)
+            var allTags: List<Tag> = listOf()
+            val amount = extractAmount(notificationText)
+            runBlocking {
+                GlobalScope.launch(Dispatchers.IO) {
+                    try {
+                        allTags = tagDao.getAllTagsCurrent()
+                        // 对获取的数据进行展示或处理
+                        allTags.forEach {
+                            Log.d("ExampleService", "Item: ${it.name}")
+                        }
+                    } catch (e: IllegalStateException) {
+                        Log.e("ExampleService", "Database error: ${e.message}")
+                    }
+                }.join()
 
-            val alertDialog = AlertDialog.Builder(this)
-                .setView(dialogView)
-                .setCancelable(false) // 设置点击弹窗外部不消失
-                .create()
+                dialogView.findViewById<RecyclerView>(R.id.recyclerViewTags).apply {
+                    layoutManager = LinearLayoutManager(this@PaymentNotificationListenerService)
+                    adapter = TagAdapter(allTags, false) {}
+                }
+                val alertDialog = AlertDialog.Builder(this@PaymentNotificationListenerService)
+                    .setView(dialogView)
+                    .setCancelable(false) // 设置点击弹窗外部不消失
+                    .create()
 
-            alertDialog.setCanceledOnTouchOutside(false) // 明确设置点击外部不消失
+                alertDialog.setCanceledOnTouchOutside(false) // 明确设置点击外部不消失
 
-            // 判断 Android 版本，并设置适当的窗口类型
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                alertDialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
-            } else {
-                alertDialog.window?.setType(WindowManager.LayoutParams.TYPE_PHONE)
+                // 判断 Android 版本，并设置适当的窗口类型
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    alertDialog.window?.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
+                } else {
+                    alertDialog.window?.setType(WindowManager.LayoutParams.TYPE_PHONE)
+                }
+
+                val buttonPay = dialogView.findViewById<Button>(R.id.tag_payment)
+                val buttonTransfer = dialogView.findViewById<Button>(R.id.tag_transfer)
+
+                buttonPay.setOnClickListener {
+                    alertDialog.dismiss()
+                }
+
+                buttonTransfer.setOnClickListener {
+                    alertDialog.dismiss()
+                }
+
+                alertDialog.show()
             }
-
-            val buttonPay = dialogView.findViewById<Button>(R.id.tag_payment)
-            val buttonTransfer = dialogView.findViewById<Button>(R.id.tag_transfer)
-
-            buttonPay.setOnClickListener {
-                Toast.makeText(this, "支付", Toast.LENGTH_SHORT).show()
-                alertDialog.dismiss()
-            }
-
-            buttonTransfer.setOnClickListener {
-                Toast.makeText(this, "转账", Toast.LENGTH_SHORT).show()
-                alertDialog.dismiss()
-            }
-
-            alertDialog.show()
         }
     }
 }

@@ -28,4 +28,7 @@ interface TagDao {
 
     @Query("SELECT * FROM tags")
     fun getAllTags(): LiveData<List<Tag>>
+
+    @Query("SELECT * FROM tags")
+    fun getAllTagsCurrent(): List<Tag>
 }
