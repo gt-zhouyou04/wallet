@@ -3,6 +3,7 @@ package com.example.wallet.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -29,7 +30,13 @@ class MainActivity : AppCompatActivity() {
         recordViewModel = ViewModelProvider(this).get(RecordViewModel::class.java)
 
         // 初始化Tag RecyclerView
-        tagAdapter = TagAdapter(listOf()) { id -> tagViewModel.delete(id) }
+        tagViewModel.allTags.observe(this) { tags ->
+            if (tags.isEmpty()) {
+                tagViewModel.deleteAll()
+                tagViewModel.addDefaultTags()
+            }
+        }
+        tagAdapter = TagAdapter(listOf()) {}
         findViewById<RecyclerView>(R.id.recyclerViewTags).apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = tagAdapter

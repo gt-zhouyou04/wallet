@@ -1,6 +1,7 @@
 package com.example.wallet.CustomManager
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.*
 import kotlinx.coroutines.launch
 
@@ -22,6 +23,18 @@ class TagViewModel(application: Application) : AndroidViewModel(application) {
         repository.delete(id)
     }
 
+    fun deleteAll() = viewModelScope.launch {
+        repository.deleteAll()
+    }
+
+    fun getAllTags() = viewModelScope.launch {
+        repository.getAllTags()
+    }
+
+    fun addDefaultTags() = viewModelScope.launch {
+        repository.addDefaultTags()
+    }
+
     fun getTagNameById(tagId: Int): LiveData<String?> {
         val tagNameLiveData = MutableLiveData<String?>()
 
@@ -32,5 +45,11 @@ class TagViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         return tagNameLiveData
+    }
+
+    fun logTags(tags: List<Tag>) {
+        tags.forEach { tag ->
+            Log.d("TagViewModel", "Tag: ${tag.id}, Name: ${tag.name}")
+        }
     }
 }

@@ -34,4 +34,9 @@ class TagAdapter(private var tags: List<Tag>, private val onDelete: (Int) -> Uni
             itemView.findViewById<TextView>(R.id.textViewTagName).text = tag.name
         }
     }
+
+    fun updateTags(newTags: List<Tag>) {
+        tags = newTags
+        notifyDataSetChanged() // 通知适配器数据已更新
+    }
 }

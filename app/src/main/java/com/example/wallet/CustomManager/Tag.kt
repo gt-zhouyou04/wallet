@@ -20,6 +20,9 @@ interface TagDao {
     @Query("DELETE FROM tags WHERE id = :id")
     suspend fun delete(id: Int)
 
+    @Query("DELETE FROM tags")
+    suspend fun deleteAll()
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(tag: Tag)
 
