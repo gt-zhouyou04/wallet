@@ -12,7 +12,10 @@ import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.WindowManager
+import android.widget.Button
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.example.wallet.R
 
@@ -95,12 +98,11 @@ class PaymentNotificationListenerService : NotificationListenerService() {
 
     private fun showDialog(notificationText: String) {
         handler.post {
+            val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            val dialogView = inflater.inflate(R.layout.activity_tag_selection, null)
+
             val alertDialog = AlertDialog.Builder(this)
-                .setTitle("支付信息")
-                .setMessage(notificationText)
-                .setPositiveButton("确定") { dialog, _ ->
-                    dialog.dismiss()
-                }
+                .setView(dialogView)
                 .setCancelable(false) // 设置点击弹窗外部不消失
                 .create()
 
@@ -112,6 +114,20 @@ class PaymentNotificationListenerService : NotificationListenerService() {
             } else {
                 alertDialog.window?.setType(WindowManager.LayoutParams.TYPE_PHONE)
             }
+
+            val buttonPay = dialogView.findViewById<Button>(R.id.tag_payment)
+            val buttonTransfer = dialogView.findViewById<Button>(R.id.tag_transfer)
+
+            buttonPay.setOnClickListener {
+                Toast.makeText(this, "支付", Toast.LENGTH_SHORT).show()
+                alertDialog.dismiss()
+            }
+
+            buttonTransfer.setOnClickListener {
+                Toast.makeText(this, "转账", Toast.LENGTH_SHORT).show()
+                alertDialog.dismiss()
+            }
+
             alertDialog.show()
         }
     }
