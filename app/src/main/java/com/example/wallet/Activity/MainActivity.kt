@@ -1,9 +1,11 @@
 package com.example.wallet.Activity
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -20,6 +22,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recordViewModel: RecordViewModel
     private lateinit var tagAdapter: TagAdapter
     private lateinit var recordAdapter: RecordAdapter
+
+    fun requestNotificationAccess(context: Context) {
+        val enabledListeners = Settings.Secure.getString(context.contentResolver, "enabled_notification_listeners")
+        val packageName = context.packageName
+
+        if (enabledListeners == null || !enabledListeners.contains(packageName)) {
+            val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+            context.startActivity(intent)
+            Toast.makeText(context, "请授予通知访问权限", Toast.LENGTH_LONG).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,7 +73,8 @@ class MainActivity : AppCompatActivity() {
         })
 
         //todo: 添加打开显示悬浮窗权限的代码——android.permission.SYSTEM_ALERT_WINDOW
-        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-        startActivity(intent)
+//        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+//        startActivity(intent)
+        requestNotificationAccess(this)
     }
 }
