@@ -20,10 +20,13 @@ import androidx.core.app.NotificationCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.wallet.CustomManager.AppDatabase
+import com.example.wallet.CustomManager.Record
+import com.example.wallet.CustomManager.RecordDao
 import com.example.wallet.CustomManager.Tag
 import com.example.wallet.CustomManager.TagAdapter
 import com.example.wallet.CustomManager.TagDao
 import com.example.wallet.R
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -33,12 +36,14 @@ class PaymentNotificationListenerService : NotificationListenerService() {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var db: AppDatabase
     private lateinit var tagDao: TagDao
+    private lateinit var recordDao: RecordDao
 
     override fun onCreate() {
         super.onCreate()
         Log.d("PaymentNotificationListenerService", "Service Created")
         db = AppDatabase.getDatabase(this)
         tagDao = db.tagDao()
+        recordDao = db.recordDao()
 
         // 创建前台服务通知
         val channelId = "PaymentNotificationListenerServiceChannel"
@@ -129,7 +134,9 @@ class PaymentNotificationListenerService : NotificationListenerService() {
             val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             val dialogView = inflater.inflate(R.layout.activity_tag_selection, null)
             var allTags: List<Tag> = listOf()
-            val amount = extractAmount(notificationText)
+            var amount = extractAmount(notificationText)
+            var timestamp: Long = 0
+            var tagId: Int = 0
             runBlocking {
                 GlobalScope.launch(Dispatchers.IO) {
                     try {
@@ -143,10 +150,12 @@ class PaymentNotificationListenerService : NotificationListenerService() {
                     }
                 }.join()
 
+                val tagAdapter = TagAdapter(allTags, false) {}
                 dialogView.findViewById<RecyclerView>(R.id.recyclerViewTags).apply {
                     layoutManager = LinearLayoutManager(this@PaymentNotificationListenerService)
-                    adapter = TagAdapter(allTags, false) {}
+                    adapter = tagAdapter
                 }
+                timestamp = System.currentTimeMillis()
                 val alertDialog = AlertDialog.Builder(this@PaymentNotificationListenerService)
                     .setView(dialogView)
                     .setCancelable(false) // 设置点击弹窗外部不消失
@@ -165,6 +174,23 @@ class PaymentNotificationListenerService : NotificationListenerService() {
                 val buttonTransfer = dialogView.findViewById<Button>(R.id.tag_transfer)
 
                 buttonPay.setOnClickListener {
+                    tagId = tagAdapter.selectedPosition + 1
+                    Log.d("ExampleService-=-=-=-=", "amount: ${amount}, timeStamp: ${timestamp}, tagId: ${tagId}")
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            // 在协程中调用挂起函数
+                            recordDao.insert(Record(amount = amount!!, tagId = tagId, timestamp = timestamp))
+                            // 添加日志输出
+                            Log.d("dwdadwdajodwidoa", "Record inserted successfully")
+                        } catch (e: Exception) {
+                            // 捕获任何异常并记录日志
+                            Log.e("dwdadwdajodwidoa", "Failed to insert record: ${e.message}", e)
+                        }
+                    }
+
+                    // 检查在主线程中某些代码是否对此产生影响
+                    Log.d("dwdadwdajodwidoa", "Coroutine launched")
                     alertDialog.dismiss()
                 }
 

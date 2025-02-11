@@ -27,4 +27,7 @@ interface RecordDao {
 
     @Query("DELETE FROM records WHERE id = :id")
     suspend fun delete(id: Int)
+
+    @Query("SELECT * FROM records")
+    fun getAllRecords(): LiveData<List<Record>>
 }

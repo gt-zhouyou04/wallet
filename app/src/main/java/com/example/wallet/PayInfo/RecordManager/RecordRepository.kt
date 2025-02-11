@@ -12,6 +12,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class RecordRepository(private val recordDao: RecordDao) {
+
+    val allRecord: LiveData<List<Record>> = recordDao.getAllRecords()
+
     fun insert(record: Record) {
         GlobalScope.launch {
             recordDao.insert(record)
@@ -25,16 +28,21 @@ class RecordRepository(private val recordDao: RecordDao) {
     suspend fun delete(id: Int) {
         recordDao.delete(id)
     }
+
+    suspend fun getAllRecords() {
+        recordDao.getAllRecords()
+    }
 }
 
 class RecordViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: RecordRepository
     private val _records = MutableLiveData<List<Record>>()
-    val records: LiveData<List<Record>> get() = _records
+    val allRecords: LiveData<List<Record>>
 
     init {
         val recordDao = AppDatabase.getDatabase(application).recordDao()
         repository = RecordRepository(recordDao)
+        allRecords = repository.allRecord
     }
 
     fun insert(record: Record) = repository.insert(record)
@@ -47,6 +55,12 @@ class RecordViewModel(application: Application) : AndroidViewModel(application) 
 
     fun delete(id: Int) = viewModelScope.launch {
         repository.delete(id)
+    }
+
+    fun getAllRecords() {
+        viewModelScope.launch {
+            repository.getAllRecords()
+        }
     }
 }
 

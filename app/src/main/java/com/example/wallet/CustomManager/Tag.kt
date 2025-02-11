@@ -8,6 +8,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import androidx.room.Transaction
 
 @Entity(tableName = "tags")
 data class Tag(
@@ -31,4 +32,13 @@ interface TagDao {
 
     @Query("SELECT * FROM tags")
     fun getAllTagsCurrent(): List<Tag>
+
+    @Transaction
+    suspend fun deleteAllAndResetIds() {
+        deleteAll()  // 清空表中的数据
+        resetPrimaryKey() // 重置主键
+    }
+
+    @Query("DELETE FROM sqlite_sequence WHERE name = 'tags'")
+    suspend fun resetPrimaryKey()
 }

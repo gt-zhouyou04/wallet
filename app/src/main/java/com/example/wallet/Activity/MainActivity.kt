@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
@@ -63,11 +64,13 @@ class MainActivity : AppCompatActivity() {
 
         // 观察标签数据
         tagViewModel.allTags.observe(this, Observer { tags ->
+            Log.d("MainActivity++++++++++", "tags: $tags")
             tags?.let { tagAdapter.setTags(it) }
         })
 
         // 观察支出记录数据
-        recordViewModel.records.observe(this, Observer { records ->
+        recordViewModel.allRecords.observe(this, Observer { records ->
+            Log.d("MainActivity++++++++++", "records: $records")
             records?.let { recordAdapter.setRecords(it) }
         })
 
